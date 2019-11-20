@@ -17,7 +17,7 @@ import django
 import pathlib
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from graphene_django.views import GraphQLView
 
 # Only in development (new solution to disable CORS in development)
@@ -28,7 +28,7 @@ from django.views.decorators.csrf import csrf_exempt
 def graphiql(request):
     """Trivial ad-hoc view to serve the `graphiql.html` file."""
     del request
-    graphiql_filepath = pathlib.Path(__file__).absolute().parent / "graphiql.html"
+    graphiql_filepath = pathlib.Path(__file__).absolute().parent / "templates/graphiql.html"
     with open(graphiql_filepath) as f:
         return django.http.response.HttpResponse(f.read())
 
@@ -46,4 +46,7 @@ urlpatterns = [
     # This url is used to get schema.graphql
     # path('graphql/', GraphQLView.as_view(graphiql=True)), # Uncomment in real?
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
+
+    # Aunthentication urls (django-rest-auth module)
+    path('rest-auth/', include('rest_auth.urls')),
 ]
