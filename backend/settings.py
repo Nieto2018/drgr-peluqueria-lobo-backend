@@ -46,6 +46,11 @@ THIRD_PARTY_APPS = [
 
     # For subscriptions
     'channels',
+
+    # For Aunthentication
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
 ]
 
 LOCAL_APPS = [
@@ -66,7 +71,7 @@ GRAPHENE = {
 AUTHENTICATION_BACKENDS = [
     # Django administration
     'django.contrib.auth.backends.ModelBackend',
-    
+
     # Django GraphQL JWT
     'graphql_jwt.backends.JSONWebTokenBackend',
 ]
@@ -99,7 +104,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'backend/templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -159,3 +166,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# It is compulsory in order to avoid the [Errno 111] when the Rest
+# API is called to reset password by Email
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST: 'localhost'
+# EMAIL_PORT: 1025
