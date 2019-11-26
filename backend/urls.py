@@ -28,9 +28,6 @@ from rest_auth.views import PasswordResetView, PasswordResetConfirmView
 from django.views.decorators.csrf import csrf_exempt
 
 
-
-
-
 # --------------------------------------------------- URL CONFIGURATION (For channels_graphql_ws module - subscriptions)
 def graphiql(request):
     """Trivial ad-hoc view to serve the `graphiql.html` file."""
