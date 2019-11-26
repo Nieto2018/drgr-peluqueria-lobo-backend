@@ -17,11 +17,18 @@ import django
 import pathlib
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from graphene_django.views import GraphQLView
+
+# Aunthentication urls (django-rest-auth module)
+from django.conf.urls import url
+from rest_auth.views import PasswordResetView, PasswordResetConfirmView
 
 # Only in development (new solution to disable CORS in development)
 from django.views.decorators.csrf import csrf_exempt
+
+
+
 
 
 # --------------------------------------------------- URL CONFIGURATION (For channels_graphql_ws module - subscriptions)
@@ -48,5 +55,6 @@ urlpatterns = [
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
 
     # Aunthentication urls (django-rest-auth module)
-    path('rest-auth/', include('rest_auth.urls')),
+    url('rest-auth/password/reset/$', PasswordResetView.as_view(), name='rest_password_reset'),
+    url('rest-auth/password/reset/confirm/$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
 ]
