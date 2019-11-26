@@ -22,7 +22,11 @@ from graphene_django.views import GraphQLView
 
 # Aunthentication urls (django-rest-auth module)
 from django.conf.urls import url
-from rest_auth.views import PasswordResetView, PasswordResetConfirmView
+from rest_auth.views import (
+    PasswordResetView, 
+    PasswordResetConfirmView,
+    PasswordChangeView
+)
 
 # Only in development (new solution to disable CORS in development)
 from django.views.decorators.csrf import csrf_exempt
@@ -54,4 +58,6 @@ urlpatterns = [
     # Aunthentication urls (django-rest-auth module)
     url('rest-auth/password/reset/$', PasswordResetView.as_view(), name='rest_password_reset'),
     url('rest-auth/password/reset/confirm/$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
+    url('rest-auth/password/reset/confirm/$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
+    url('rest-auth/password/change/$', PasswordChangeView.as_view(), name='rest_password_change'),
 ]
