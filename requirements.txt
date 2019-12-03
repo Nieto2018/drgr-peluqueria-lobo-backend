@@ -1,3 +1,4 @@
+graphql-core==2.2.1
 django_graphql_jwt==0.2.2
 graphene_django==2.6.0
 channels==2.3.0
