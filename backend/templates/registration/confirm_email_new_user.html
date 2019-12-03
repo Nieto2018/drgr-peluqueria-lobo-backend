@@ -1,0 +1,9 @@
+{% load i18n %}{% blocktrans %}¡Muchas gracias por unirte a {{ site_name }}!
+
+Para terminar el registro tan solamente necesitas confirmarnos tu correo electrónico
+
+Si tu NO solicitaste darte de alta simplemente IGNORE este mensaje.
+
+Haz click en el siguiente enlace para confirmar tu correo electrónico.{% endblocktrans %}
+
+{{ site_url }}/{{ site_dir }}?token={{ temp_key }}

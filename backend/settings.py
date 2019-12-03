@@ -171,3 +171,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST: 'localhost'
 # EMAIL_PORT: 1025
+
+# ------------------------------------------------------------------------------------------------
+# Constants
+# ------------------------------------------------------------------------------------------------
+
+CLIENT_URL = 'http://localhost:3000'
+SITE_NAME = 'Peluquería Lobo'

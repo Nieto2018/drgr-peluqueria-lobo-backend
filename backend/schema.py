@@ -15,7 +15,7 @@ class Query(dates_schemas.Query, users_schemas.Query, graphene.ObjectType):
 # This class is created in order to log in with email and password
 class CustomObtainJSONWebToken(graphene.Mutation):
     token = graphene.String(required=True)
-    user = graphene.Field(users_schemas.UserType)
+    user = graphene.Field(users_schemas.UserNode)
 
     class Arguments:
         email = graphene.String(required=True)

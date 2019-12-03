@@ -1,0 +1,10 @@
+{% load i18n %}{% blocktrans %}¡Hola {{ user }}!
+
+Hemos detectado un cambio de correo electrónico en tu cuenta de {{ site_name }}
+
+Si tu NO solicitaste el cambio simplemente IGNORE este mensaje, de lo contrario,
+tenga en cuenta que a partir del cambio debes acceder con su nuevo correo electrónico.
+
+Haz click en el siguiente enlace para confirmar tu nuevo correo electrónico.{% endblocktrans %}
+
+{{ site_url }}/{{ site_dir }}?token={{ temp_key }}
