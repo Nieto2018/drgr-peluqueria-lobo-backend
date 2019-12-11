@@ -8,7 +8,7 @@ from graphql_jwt.utils import jwt_payload, jwt_encode, jwt_decode
 import graphene
 
 
-class UserNode(DjangoObjectType):
+class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
 
@@ -83,8 +83,8 @@ class SendVerificationEmail(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    me = graphene.Field(UserNode)
-    users = graphene.List(UserNode)
+    me = graphene.Field(UserType)
+    users = graphene.List(UserType)
     send_verification_email = SendVerificationEmail.Field()
 
     def resolve_me(self, info):
@@ -99,7 +99,7 @@ class Query(graphene.ObjectType):
 
 
 class CreateUser(graphene.Mutation):
-    user = graphene.Field(UserNode)
+    user = graphene.Field(UserType)
 
     class Arguments:
         username = graphene.String(required=True)
