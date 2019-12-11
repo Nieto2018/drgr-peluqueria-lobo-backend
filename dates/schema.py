@@ -1,6 +1,13 @@
 import graphene
 
-from .subscriptions import AppointmentStateNode, UserInfoNode, OnAppointmentState, AppointmentState, AppointmentNode
+from .subscriptions import \
+    AppointmentNode, \
+    AppointmentStateActionEnum, \
+    AppointmentStateNode, \
+    AppointmentState, \
+    OnAppointmentState, \
+    UserInfoNode
+
 # from django.contrib.auth.models import User
 from graphene import relay
 from graphene_django.filter import DjangoFilterConnectionField
@@ -8,7 +15,6 @@ from graphql_relay.node.node import from_global_id
 
 
 class CreateAppointmentState(graphene.Mutation):
-
     # Relay allows Output objects
     appointment_state_node = graphene.Field(AppointmentStateNode)
 
@@ -21,7 +27,7 @@ class CreateAppointmentState(graphene.Mutation):
         appointment_state.save()
 
         OnAppointmentState.action_appointment_state(
-            action="create",
+            action=AppointmentStateActionEnum.CREATE_APPOINTMENT_STATE.value,
             appointment_state_node=appointment_state
         )
 
@@ -44,7 +50,7 @@ class UpdateAppointmentState(graphene.Mutation):
         appointment_state.save()
 
         OnAppointmentState.action_appointment_state(
-            action="update",
+            action=AppointmentStateActionEnum.UPDATE_APPOINTMENT_STATE.value,
             appointment_state_node=appointment_state
         )
 
@@ -65,7 +71,7 @@ class DeleteAppointmentState(graphene.Mutation):
         appointment_state.delete()
 
         OnAppointmentState.action_appointment_state(
-            action="delete",
+            action=AppointmentStateActionEnum.DELETE_APPOINTMENT_STATE.value,
             appointment_state_node=appointment_state
         )
 

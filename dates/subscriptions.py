@@ -48,9 +48,9 @@ class AppointmentNode(DjangoObjectType):
 
 
 class AppointmentStateActionEnum(graphene.Enum):
-    CREATED_APPOINTMENT_STATE = "Create"
-    UPDATED_APPOINTMENT_STATE = "Update"
-    DELETED_APPOINTMENT_STATE = "Delete"
+    CREATE_APPOINTMENT_STATE = "Create"
+    UPDATE_APPOINTMENT_STATE = "Update"
+    DELETE_APPOINTMENT_STATE = "Delete"
 
 
 class OnAppointmentState(channels_graphql_ws.Subscription):
@@ -67,7 +67,7 @@ class OnAppointmentState(channels_graphql_ws.Subscription):
         """Client subscription handler."""
         del info
         # Specify the subscription group client subscribes to.
-        return ["appointment_state_{}".format(action)] if action is not None else ["appointment_state"]
+        return ["appointment_state_{}".format(action)]
 
     def publish(self, info, action=None):
         """Called to prepare the subscription notification appointment state."""
@@ -88,5 +88,5 @@ class OnAppointmentState(channels_graphql_ws.Subscription):
         implementation details.
         """
         cls.broadcast(
-            group="appointment_state_{}".format(action) if action is not None else "appointment_state",
+            group="appointment_state_{}".format(action),
             payload={"action": action, "appointment_state_node": appointment_state_node})

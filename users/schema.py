@@ -32,7 +32,7 @@ class SendVerificationEmail(graphene.Mutation):
         # action=UPDATE_EMAIL => To change email (User must be active)
         # action=RESET_PASSWORD => To reset password (User must be active)
         action = graphene.Argument(UserActionEnum, required=True,
-                                      description="Possible values: CREATE_USER, UPDATE_EMAIL or RESET_PASSWORD")
+                                   description="Possible values: CREATE_USER, UPDATE_EMAIL or RESET_PASSWORD")
 
     def mutate(self, info, email, action):
 
