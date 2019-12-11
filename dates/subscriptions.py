@@ -22,7 +22,7 @@ class UserInfoNode(DjangoObjectType):
         }
 
         # Necessary for relay
-        interfaces = (relay.Node, )
+        interfaces = (relay.Node,)
 
 
 class AppointmentStateNode(DjangoObjectType):
@@ -44,7 +44,13 @@ class AppointmentNode(DjangoObjectType):
             'appointment_date',
             'appointment_state'
         ]
-        interfaces = (relay.Node, )
+        interfaces = (relay.Node,)
+
+
+class AppointmentStateActionEnum(graphene.Enum):
+    CREATED_APPOINTMENT_STATE = "Create"
+    UPDATED_APPOINTMENT_STATE = "Update"
+    DELETED_APPOINTMENT_STATE = "Delete"
 
 
 class OnAppointmentState(channels_graphql_ws.Subscription):
@@ -55,7 +61,7 @@ class OnAppointmentState(channels_graphql_ws.Subscription):
 
     class Arguments:
         """Subscription arguments."""
-        action = graphene.String()
+        action = graphene.Argument(AppointmentStateActionEnum, required=True)
 
     def subscribe(self, info, action=None):
         """Client subscription handler."""
