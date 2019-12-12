@@ -54,10 +54,4 @@ urlpatterns = [
     # This url is used to get schema.graphql
     # path('graphql/', GraphQLView.as_view(graphiql=True)), # Uncomment in real?
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
-
-    # Aunthentication urls (django-rest-auth module)
-    url('rest-auth/password/reset/$', PasswordResetView.as_view(), name='rest_password_reset'),
-    url('rest-auth/password/reset/confirm/$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
-    url('rest-auth/password/reset/confirm/$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
-    url('rest-auth/password/change/$', PasswordChangeView.as_view(), name='rest_password_change'),
 ]
