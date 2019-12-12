@@ -13,23 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-import django
-import pathlib
-
 from django.contrib import admin
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt  # Only in development (new solution to disable CORS in development)
 from graphene_django.views import GraphQLView
 
-# Aunthentication urls (django-rest-auth module)
-from django.conf.urls import url
-from rest_auth.views import (
-    PasswordResetView, 
-    PasswordResetConfirmView,
-    PasswordChangeView
-)
-
-# Only in development (new solution to disable CORS in development)
-from django.views.decorators.csrf import csrf_exempt
+import django
+import pathlib
 
 
 # --------------------------------------------------- URL CONFIGURATION (For channels_graphql_ws module - subscriptions)
