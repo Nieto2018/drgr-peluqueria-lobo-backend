@@ -1,0 +1,21 @@
+##########################
+Users
+##########################
+
+EmailSent
+EmailUpdated
+
+# Errors
+UserDoesNotExist
+UserNotLoggedIn
+UserActive
+UserInactive
+EmailRequired
+
+
+##########################
+Generics
+##########################
+
+# Errors
+InvalidAction
