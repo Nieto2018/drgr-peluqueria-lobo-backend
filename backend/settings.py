@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+import datetime
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -61,6 +62,12 @@ GRAPHENE = {
         # Django GraphQL JWT
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
+}
+
+# Django GraphQL JWT settings
+GRAPHQL_JWT = {
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=30),  # Default minutes=5
 }
 
 AUTHENTICATION_BACKENDS = [

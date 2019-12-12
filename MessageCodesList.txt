@@ -4,6 +4,7 @@ Users
 
 EmailSent
 EmailUpdated
+PasswordReset
 
 # Errors
 UserDoesNotExist
@@ -11,6 +12,11 @@ UserNotLoggedIn
 UserActive
 UserInactive
 EmailRequired
+EmailNotUpdated
+PasswordNotReset
+Password1Required
+Password2Required
+PasswordsNotMatch
 
 
 ##########################
@@ -19,3 +25,5 @@ Generics
 
 # Errors
 InvalidAction
+TokenError
+TokenUsed

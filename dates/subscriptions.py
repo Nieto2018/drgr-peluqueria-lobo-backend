@@ -48,9 +48,9 @@ class AppointmentNode(DjangoObjectType):
 
 
 class AppointmentStateActionEnum(graphene.Enum):
-    CREATE_APPOINTMENT_STATE = "Create"
-    UPDATE_APPOINTMENT_STATE = "Update"
-    DELETE_APPOINTMENT_STATE = "Delete"
+    CREATE_APPOINTMENT_STATE = "Create_appointment"
+    UPDATE_APPOINTMENT_STATE = "Update_appointment"
+    DELETE_APPOINTMENT_STATE = "Delete_appointment"
 
 
 class OnAppointmentState(channels_graphql_ws.Subscription):
