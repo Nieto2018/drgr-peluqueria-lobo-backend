@@ -46,9 +46,6 @@ THIRD_PARTY_APPS = [
 
     # For subscriptions
     'channels',
-
-    # For Aunthentication
-    'rest_framework',
 ]
 
 LOCAL_APPS = [

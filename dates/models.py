@@ -15,8 +15,10 @@ class DateTimeModel(models.Model):
 
 class UserInfo(DateTimeModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='userinfo')
-    is_vip = models.BooleanField(default=False)
     user_managed_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='manager', null=True, blank=True)
+    is_vip = models.BooleanField(default=False)
+    last_token = models.CharField(default=None, max_length=255, null=True, blank=True)
+    is_used_last_token = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.user.username

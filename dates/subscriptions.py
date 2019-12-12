@@ -10,7 +10,7 @@ from graphene_django import DjangoObjectType
 class UserInfoNode(DjangoObjectType):
     class Meta:
         model = UserInfo
-        exclude_fields = ('created', 'edited')
+        exclude_fields = ('last_token', 'is_used_last_token', 'created', 'edited')
 
         # Filter fields for relay queries
         filter_fields = {
