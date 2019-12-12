@@ -24,73 +24,93 @@ class SendVerificationEmail(graphene.Mutation):
     email = graphene.String()
     action = graphene.String()
     result = graphene.String()
+    errors = graphene.List(graphene.String)
 
     class Arguments:
-        email = graphene.String(required=True)
+        email = graphene.String()
 
         # action=CREATE_USER => To activate a new user
         # action=UPDATE_EMAIL => To change email (User must be active)
         # action=RESET_PASSWORD => To reset password (User must be active)
-        action = graphene.Argument(UserActionEnum, required=True,
+        action = graphene.Argument(UserActionEnum,
                                    description="Possible values: CREATE_USER, UPDATE_EMAIL or RESET_PASSWORD")
 
     def mutate(self, info, email, action):
 
+        user = None
+        username = None
+        errors_list = []
+        result = "EmailNotSent"
+
+        if email is None or len(email.strip()) == 0:
+            errors_list.append('EmailRequired')
+            # raise Exception('EmailRequired')
+
         try:
             user = get_user_model().objects.get(email__iexact=email)
         except get_user_model().DoesNotExist:
-            raise Exception('UserDoesNotExist')
+            errors_list.append('UserDoesNotExist')
+            # raise Exception('UserDoesNotExist')
 
-        # https://django-graphql-jwt.domake.io/en/stable/settings.html#pyjwt
-        payload = jwt_payload(user, context=None)
-        payload['email'] = email
-        token = jwt_encode(payload, context=None)
+        if user is not None:
+            # https://django-graphql-jwt.domake.io/en/stable/settings.html#pyjwt
+            username = user.username
+            payload = jwt_payload(user, context=None)
+            payload['email'] = email
+            token = jwt_encode(payload, context=None)
 
-        if UserActionEnum.CREATE_USER == action:
-            if user.is_active:
-                raise Exception('UserActive')
-            template_name = "registration/verify_account_email.html"
-            subject = SITE_NAME + " - Finalizar registro"
-            site_dir = "account/user-activated"
-        else:
-            if UserActionEnum.UPDATE_EMAIL == action:
-                if not user.is_active:
-                    raise Exception('UserInactive')
+            if UserActionEnum.CREATE_USER == action:
+                if user.is_active:
+                    errors_list.append('UserActive')
+                    # raise Exception('UserActive')
                 template_name = "registration/verify_account_email.html"
-                subject = SITE_NAME + " - Actualizar dirección de correo electrónico"
-                site_dir = "account/email-updated"
+                subject = SITE_NAME + " - Finalizar registro"
+                site_dir = "account/user-activated"
             else:
-                if UserActionEnum.RESET_PASSWORD == action:
+                if UserActionEnum.UPDATE_EMAIL == action:
                     if not user.is_active:
-                        raise Exception('UserInactive')
-                    template_name = "registration/password_reset_email.html"
-                    subject = SITE_NAME + " - Restablecer contraseña"
-                    site_dir = "account/reset-password-confirm"
+                        errors_list.append('UserInactive')
+                        # raise Exception('UserInactive')
+                    template_name = "registration/verify_account_email.html"
+                    subject = SITE_NAME + " - Actualizar dirección de correo electrónico"
+                    site_dir = "account/email-updated"
                 else:
-                    raise Exception('OperationInvalid')
+                    if UserActionEnum.RESET_PASSWORD == action:
+                        if not user.is_active:
+                            errors_list.append('UserInactive')
+                            # raise Exception('UserInactive')
+                        template_name = "registration/password_reset_email.html"
+                        subject = SITE_NAME + " - Restablecer contraseña"
+                        site_dir = "account/reset-password-confirm"
+                    else:
+                        errors_list.append('InvalidAction')
+                        # raise Exception('InvalidAction')
 
-        message = render_to_string(template_name, {
-            "user": user.username,
-            "temp_key": token,
-            "site_url": CLIENT_URL,
-            "site_dir": site_dir,
-            "site_name": SITE_NAME
-        })
-        email_to_send = EmailMessage(subject, message, to=[email])
-        email_to_send.send()
+        if len(errors_list) == 0:
+            message = render_to_string(template_name, {
+                "user": user.username,
+                "temp_key": token,
+                "site_url": CLIENT_URL,
+                "site_dir": site_dir,
+                "site_name": SITE_NAME
+            })
+            email_to_send = EmailMessage(subject, message, to=[email])
+            email_to_send.send()
+            result = "EmailSent"
 
-        return SendVerificationEmail(user=user.username, email=email, action=action, result="EmailSent")
+        return SendVerificationEmail(user=username, email=email, action=action, result=result, errors=errors_list)
 
 
 class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
     users = graphene.List(UserType)
-    send_verification_email = SendVerificationEmail.Field()
+
+    # send_verification_email = SendVerificationEmail.Field()
 
     def resolve_me(self, info):
         user = info.context.user
         if user.is_anonymous:
-            raise Exception('Not logged in!')
+            raise Exception('UserNotLoggedIn')
 
         return user
 
@@ -144,3 +164,4 @@ class UpdateEmail(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_email = UpdateEmail.Field()
+    send_verification_email = SendVerificationEmail.Field()
