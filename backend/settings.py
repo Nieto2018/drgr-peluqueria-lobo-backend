@@ -55,6 +55,9 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = THIRD_PARTY_APPS + LOCAL_APPS + DJANGO_APPS
 
+# Define a custom User model
+AUTH_USER_MODEL = 'dates.User'
+
 # Graphene settings
 GRAPHENE = {
     'SCHEMA': 'backend.schema.graphql_schema',

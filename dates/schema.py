@@ -1,4 +1,6 @@
-import graphene
+from graphene import relay
+from graphene_django.filter import DjangoFilterConnectionField
+from graphql_relay.node.node import from_global_id
 
 from .subscriptions import \
     AppointmentNode, \
@@ -8,10 +10,7 @@ from .subscriptions import \
     OnAppointmentState, \
     UserInfoNode
 
-# from django.contrib.auth.models import User
-from graphene import relay
-from graphene_django.filter import DjangoFilterConnectionField
-from graphql_relay.node.node import from_global_id
+import graphene
 
 
 class CreateAppointmentState(graphene.Mutation):

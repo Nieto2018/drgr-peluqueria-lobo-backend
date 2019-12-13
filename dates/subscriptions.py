@@ -1,9 +1,9 @@
-import channels_graphql_ws
-import graphene
-
 from .models import Appointment, AppointmentState, UserInfo
 from graphene import relay
 from graphene_django import DjangoObjectType
+
+import channels_graphql_ws
+import graphene
 
 
 # Nodes moved from schema.py to subscriptions.py to avoid import problems
@@ -15,7 +15,6 @@ class UserInfoNode(DjangoObjectType):
         # Filter fields for relay queries
         filter_fields = {
             'user': ['exact'],
-            'user__username': ['exact', 'contains', 'istartswith'],
             'user__first_name': ['exact', 'contains', 'istartswith'],
             'user__last_name': ['exact', 'contains', 'istartswith'],
             'user__email': ['exact', 'contains'],
