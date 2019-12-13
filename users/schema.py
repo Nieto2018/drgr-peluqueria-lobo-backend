@@ -1,12 +1,14 @@
-from backend.settings import CLIENT_URL, SITE_NAME
+from backend import settings
 from django.db import transaction
 from django.core.mail import EmailMessage
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 from graphene_django import DjangoObjectType
 from graphql_jwt.utils import jwt_payload, jwt_encode, jwt_decode
+from jwt.exceptions import ExpiredSignatureError
 
 import graphene
+import sys
 
 
 class UserType(DjangoObjectType):
@@ -27,7 +29,7 @@ class Query(graphene.ObjectType):
     def resolve_me(self, info):
         user = info.context.user
         if user.is_anonymous:
-            raise Exception('UserNotLoggedIn')
+            raise Exception(settings.USER_NOT_LOGGED_IN_ERROR)
 
         return user
 
@@ -54,11 +56,12 @@ class SendVerificationEmail(graphene.Mutation):
     def mutate(self, info, email, action):
 
         username = None
+        # result = settings.EMAIL_NOT_SENT_ERROR
+        result = settings.KO
         errors_list = []
-        result = "EmailNotSent"
 
         if email is None or len(email.strip()) == 0:
-            errors_list.append('EmailRequired')
+            errors_list.append(settings.EMAIL_REQUIRED_ERROR)
 
         user = None
         try:
@@ -70,11 +73,11 @@ class SendVerificationEmail(graphene.Mutation):
                 else:
                     user_email = user.email
             if email is None or len(email.strip()) == 0:
-                errors_list.append('EmailRequired')
+                errors_list.append(settings.EMAIL_REQUIRED_ERROR)
 
             user = get_user_model().objects.get(email__iexact=user_email)
         except get_user_model().DoesNotExist:
-            errors_list.append('UserDoesNotExist')
+            errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
 
         payload = None
         template_name = None
@@ -87,48 +90,104 @@ class SendVerificationEmail(graphene.Mutation):
 
             if UserActionEnum.ACTIVATE_USER == action:
                 if user.is_active:
-                    errors_list.append('UserActive')
+                    errors_list.append(settings.USER_ACTIVE_ERROR)
                 else:
                     template_name = "registration/verify_account_email.html"
-                    subject = SITE_NAME + " - Finalizar registro"
+                    subject = settings.SITE_NAME + " - Finalizar registro"
                     site_dir = "account/user-activated"
             elif UserActionEnum.UPDATE_EMAIL == action:
                 if not user.is_active:
-                    errors_list.append('UserInactive')
+                    errors_list.append(settings.USER_INACTIVE_ERROR)
                 else:
                     payload['email'] = email
                     template_name = "registration/verify_account_email.html"
-                    subject = SITE_NAME + " - Actualizar dirección de correo electrónico"
+                    subject = settings.SITE_NAME + " - Actualizar dirección de correo electrónico"
                     site_dir = "account/email-updated"
             elif UserActionEnum.RESET_PASSWORD == action:
                 if not user.is_active:
-                    errors_list.append('UserInactive')
+                    errors_list.append(settings.USER_INACTIVE_ERROR)
                 else:
                     template_name = "registration/password_reset_email.html"
-                    subject = SITE_NAME + " - Restablecer contraseña"
+                    subject = settings.SITE_NAME + " - Restablecer contraseña"
                     site_dir = "account/reset-password-confirm"
             else:
                 errors_list.append('InvalidAction')
 
-        if len(errors_list) == 0:
-            token = jwt_encode(payload)
-            message = render_to_string(template_name, {
-                "user": user.username,
-                "temp_key": token,
-                "site_url": CLIENT_URL,
-                "site_dir": site_dir,
-                "site_name": SITE_NAME
-            })
-            email_to_send = EmailMessage(subject, message, to=[email])
-            email_to_send.send()
+            if len(errors_list) == 0:
+                token = jwt_encode(payload)
+                message = render_to_string(template_name, {
+                    "user": user.username,
+                    "temp_key": token,
+                    "site_url": settings.CLIENT_URL,
+                    "site_dir": site_dir,
+                    "site_name": settings.SITE_NAME
+                })
+                email_to_send = EmailMessage(subject, message, to=[email])
+                email_to_send.send()
 
-            # It save the token information to allow a only use
-            user.userinfo.is_used_last_token = False
-            user.userinfo.last_token = token
-            user.userinfo.save()
-            result = "EmailSent"
+                # It save the token information to allow a only use
+                user.userinfo.is_used_last_token = False
+                user.userinfo.last_token = token
+                user.userinfo.save()
+                # result = settings.EMAIL_SENT
+                result = settings.OK
 
         return SendVerificationEmail(user=username, email=email, action=action, result=result, errors=errors_list)
+
+
+class ActivateUser(graphene.Mutation):
+    user = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    class Arguments:
+        token = graphene.String()
+
+    def mutate(self, info, token):
+        username = None
+        # result = settings.USER_NOT_ACTIVATED_ERROR
+        result = settings.KO
+        errors_list = []
+
+        if token is None or len(token.strip()) == 0:
+            errors_list.append(settings.TOKEN_REQUIRED_ERROR)
+        else:
+            try:
+                payload = jwt_decode(token)
+                username = payload.get('username')
+
+                if username is None or len(username.strip()) == 0:
+                    raise Exception()
+
+                user = None
+                try:
+                    user = get_user_model().objects.get(username=username)
+                except get_user_model().DoesNotExist:
+                    errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+
+                if user is not None:
+                    if user.is_active:
+                        errors_list.append(settings.USER_ACTIVE_ERROR)
+                    elif token != user.userinfo.last_token:
+                        raise Exception(settings.TOKEN_NOT_MATCH_ERROR)
+                    elif user.userinfo.is_used_last_token:
+                        errors_list.append(settings.TOKEN_USED_ERROR)
+
+                    if len(errors_list) == 0:
+                        user.is_active = True
+                        user.save()
+
+                        user.userinfo.is_used_last_token = True
+                        user.userinfo.save()
+                        # result = settings.USER_ACTIVATED
+                        result = settings.OK
+
+            except ExpiredSignatureError:
+                errors_list.append(settings.EXPIRED_TOKEN_ERROR)
+            except Exception:
+                errors_list.append(settings.TOKEN_ERROR)
+
+        return ActivateUser(user=username, result=result, errors=errors_list)
 
 
 class UpdateEmail(graphene.Mutation):
@@ -145,11 +204,12 @@ class UpdateEmail(graphene.Mutation):
         username = None
         old_email = None
         new_email = None
-        result = "EmailNotUpdated"
+        # result = settings.EMAIL_NOT_UPDATED_ERROR
+        result = settings.KO
         errors_list = []
 
         if token is None or len(token.strip()) == 0:
-            errors_list.append('TokenRequired')
+            errors_list.append(settings.TOKEN_REQUIRED_ERROR)
         else:
             try:
                 payload = jwt_decode(token)
@@ -165,23 +225,29 @@ class UpdateEmail(graphene.Mutation):
                     user = get_user_model().objects.get(username=username)
                     old_email = user.email
                 except get_user_model().DoesNotExist:
-                    errors_list.append('UserDoesNotExist')
+                    errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
 
-                if not user.is_active:
-                    errors_list.append('UserInactive')
-                elif token != user.userinfo.last_token or user.userinfo.is_used_last_token:
-                    errors_list.append('TokenUsed')
+                if user is not None:
+                    if not user.is_active:
+                        errors_list.append(settings.USER_INACTIVE_ERROR)
+                    elif token != user.userinfo.last_token:
+                        errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
+                    elif user.userinfo.is_used_last_token:
+                        errors_list.append(settings.TOKEN_USED_ERROR)
 
-                if len(errors_list) == 0:
-                    user.email = new_email
-                    user.save()
+                    if len(errors_list) == 0:
+                        user.email = new_email
+                        user.save()
 
-                    user.userinfo.is_used_last_token = True
-                    user.userinfo.save()
-                    result = "EmailUpdated"
+                        user.userinfo.is_used_last_token = True
+                        user.userinfo.save()
+                        # result = settings.EMAIL_UPDATED
+                        result = settings.OK
 
+            except ExpiredSignatureError:
+                errors_list.append(settings.EXPIRED_TOKEN_ERROR)
             except Exception:
-                errors_list.append('TokenError')
+                errors_list.append(settings.TOKEN_ERROR)
 
         return UpdateEmail(user=username, old_email=old_email, new_email=new_email, result=result, errors=errors_list)
 
@@ -197,39 +263,42 @@ class ResetPassword(graphene.Mutation):
         password2 = graphene.String()
 
     def mutate(self, info, token, password1, password2):
-
         username = None
+        # result = settings.PASSWORD_NOT_RESET_ERROR
+        result = settings.KO
         errors_list = []
-        result = "PasswordNotReset"
 
         if password1 is None or len(password1.strip()) == 0:
-            errors_list.append('Password1Required')
+            errors_list.append(settings.PASSWORD1_REQUIRED_ERROR)
 
         if password2 is None or len(password2.strip()) == 0:
-            errors_list.append('Password2Required')
+            errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
         else:
             if password1 != password2:
-                errors_list.append('PasswordsNotMatch')
+                errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
 
         if token is None or len(token.strip()) == 0:
-            errors_list.append('TokenRequired')
+            errors_list.append(settings.TOKEN_REQUIRED_ERROR)
         else:
             try:
                 payload = jwt_decode(token)
                 username = payload.get('username')
                 if username is None or len(username.strip()) == 0:
                     raise Exception()
-                else:
-                    user = None
-                    try:
-                        user = get_user_model().objects.get(username=username)
-                    except get_user_model().DoesNotExist:
-                        errors_list.append('UserDoesNotExist')
 
+                user = None
+                try:
+                    user = get_user_model().objects.get(username=username)
+                except get_user_model().DoesNotExist:
+                    errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+
+                if user is not None:
                     if not user.is_active:
-                        errors_list.append('UserInactive')
-                    elif token != user.userinfo.last_token or user.userinfo.is_used_last_token:
-                        errors_list.append('InvalidToken')
+                        errors_list.append(settings.USER_INACTIVE_ERROR)
+                    elif token != user.userinfo.last_token:
+                        errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
+                    elif user.userinfo.is_used_last_token:
+                        errors_list.append(settings.TOKEN_USED_ERROR)
 
                     if len(errors_list) == 0:
                         # https://django-graphql-jwt.domake.io/en/stable/settings.html#pyjwt
@@ -239,9 +308,13 @@ class ResetPassword(graphene.Mutation):
 
                         user.userinfo.is_used_last_token = True
                         user.userinfo.save()
-                        result = "PasswordReset"
+                        # result = settings.PASSWORD_RESET
+                        result = settings.OK
+
+            except ExpiredSignatureError:
+                errors_list.append(settings.EXPIRED_TOKEN_ERROR)
             except Exception:
-                errors_list.append('TokenError')
+                errors_list.append(settings.TOKEN_ERROR)
 
         return ResetPassword(user=username, result=result, errors=errors_list)
 
@@ -267,8 +340,38 @@ class CreateUser(graphene.Mutation):
         return CreateUser(user=user)
 
 
+class DeactivateUser(graphene.Mutation):
+    user = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    def mutate(self, info):
+        # result = settings.USER_DEACTIVATED_ERROR
+        result = settings.KO
+        errors_list = []
+
+        user = info.context.user
+        if user.is_anonymous:
+            errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
+        elif not user.is_active:
+            errors_list.append(settings.USER_INACTIVE_ERROR)
+
+        if len(errors_list) == 0:
+            user.is_active = False
+            user.save()
+
+            user.userinfo.is_used_last_token = True
+            user.userinfo.save()
+            # result = settings.USER_DEACTIVATED
+            result = settings.OK
+
+        return DeactivateUser(user=user.username, result=result, errors=errors_list)
+
+
 class Mutation(graphene.ObjectType):
-    create_user = CreateUser.Field()
-    update_email = UpdateEmail.Field()
     send_verification_email = SendVerificationEmail.Field()
+    activate_user = ActivateUser.Field()
+    update_email = UpdateEmail.Field()
     reset_password = ResetPassword.Field()
+    deactivate_user = DeactivateUser.Field()
+    create_user = CreateUser.Field()

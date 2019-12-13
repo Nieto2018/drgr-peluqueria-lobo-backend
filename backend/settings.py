@@ -176,9 +176,58 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST: 'localhost'
 # EMAIL_PORT: 1025
 
-# ------------------------------------------------------------------------------------------------
+
+#########################################################################################################
+#########################################################################################################
 # Constants
-# ------------------------------------------------------------------------------------------------
+#########################################################################################################
+#########################################################################################################
+
+##########################
+# Config constants
+##########################
 
 CLIENT_URL = 'http://localhost:3000'
 SITE_NAME = 'Peluquería Lobo'
+
+##########################
+#  Users
+##########################
+
+# Messages
+# EMAIL_SENT = 'EmailSent'
+# EMAIL_UPDATED = 'EmailUpdated'
+# PASSWORD_RESET = 'PasswordReset'
+# USER_ACTIVATED = 'UserActivated'
+# USER_DEACTIVATED = 'UserDeactivated'
+
+# Error messages
+USER_DOES_NOT_EXIST_ERROR = 'UserDoesNotExistError'
+USER_NOT_LOGGED_IN_ERROR = 'UserNotLoggedInError'
+# USER_NOT_ACTIVATED_ERROR = 'UserNotActivatedError'
+USER_ACTIVE_ERROR = 'UserActiveErrorError'
+USER_INACTIVE_ERROR = 'UserInactiveError'
+# USER_ACTIVATED_ERROR = 'UserActivated'
+# USER_DEACTIVATED_ERROR = 'UserDeactivatedError'
+# EMAIL_NOT_SENT_ERROR = 'EmailNotSendError'
+EMAIL_REQUIRED_ERROR = 'EmailRequiredError'
+# EMAIL_NOT_UPDATED_ERROR = 'EmailNotUpdatedError'
+# PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
+PASSWORD1_REQUIRED_ERROR = 'Password1RequiredError'
+PASSWORD2_REQUIRED_ERROR = 'Password2RequiredError'
+PASSWORDS_NOT_MATCH_ERROR = 'PasswordsNotMatchError'
+##########################
+# Generics
+##########################
+
+# Messages
+OK = 'Ok'
+KO = 'KO'
+
+# Error messages
+INVALID_ACTION_ERROR = 'InvalidActionError'
+TOKEN_ERROR = 'TokenError'
+TOKEN_REQUIRED_ERROR = 'TokenRequiredError'
+TOKEN_USED_ERROR = 'TokenUsedError'
+TOKEN_NOT_MATCH_ERROR = 'TokenNotMatchError'
+EXPIRED_TOKEN_ERROR = 'ExpiredTokenError'
