@@ -44,6 +44,11 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField(_('email address'), unique=True)
+    user_managed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='manager', null=True, blank=True)
+    is_vip = models.BooleanField(default=False)
+    last_token = models.CharField(default=None, max_length=255, null=True, blank=True)
+    is_used_last_token = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -59,21 +64,6 @@ class DateTimeModel(models.Model):
 
     class Meta:
         abstract = True
-
-
-class UserInfo(DateTimeModel):
-    # settings.AUTH_USER_MODEL takes User model from settings.py AUTH_USER_MODEL = 'dates.User'
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='userinfo')
-    user_managed_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='manager', null=True, blank=True)
-    is_vip = models.BooleanField(default=False)
-    last_token = models.CharField(default=None, max_length=255, null=True, blank=True)
-    is_used_last_token = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return self.user.email
-
-    def __str__(self):
-        return self.user.email
 
 
 class AppointmentState(DateTimeModel):

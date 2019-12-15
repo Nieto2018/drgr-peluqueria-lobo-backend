@@ -7,8 +7,7 @@ from .subscriptions import \
     AppointmentStateActionEnum, \
     AppointmentStateNode, \
     AppointmentState, \
-    OnAppointmentState, \
-    UserInfoNode
+    OnAppointmentState
 
 import graphene
 
@@ -79,9 +78,6 @@ class DeleteAppointmentState(graphene.Mutation):
 
 class Query(graphene.ObjectType):
     """Root GraphQL query."""
-
-    relay_user_info = relay.Node.Field(UserInfoNode)
-    relay_user_infos = DjangoFilterConnectionField(UserInfoNode)
 
     relay_appointment_state = relay.Node.Field(AppointmentStateNode)
     relay_appointment_states = DjangoFilterConnectionField(AppointmentStateNode)

@@ -1,27 +1,9 @@
-from .models import Appointment, AppointmentState, UserInfo
+from .models import Appointment, AppointmentState
 from graphene import relay
 from graphene_django import DjangoObjectType
 
 import channels_graphql_ws
 import graphene
-
-
-# Nodes moved from schema.py to subscriptions.py to avoid import problems
-class UserInfoNode(DjangoObjectType):
-    class Meta:
-        model = UserInfo
-        exclude_fields = ('last_token', 'is_used_last_token', 'created', 'edited')
-
-        # Filter fields for relay queries
-        filter_fields = {
-            'user': ['exact'],
-            'user__first_name': ['exact', 'contains', 'istartswith'],
-            'user__last_name': ['exact', 'contains', 'istartswith'],
-            'user__email': ['exact', 'contains'],
-        }
-
-        # Necessary for relay
-        interfaces = (relay.Node,)
 
 
 class AppointmentStateNode(DjangoObjectType):
