@@ -44,9 +44,12 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField(_('email address'), unique=True)
-    user_managed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='manager', null=True, blank=True)
+    phone_number = models.CharField(_('phone number'), default=None, max_length=15, null=True, blank=True)
     is_vip = models.BooleanField(default=False)
+    # TODO delete user_managed_by?
+    # user_managed_by = models.ForeignKey(
+    #     settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='manager', null=True, blank=True)
+
     last_token = models.CharField(default=None, max_length=255, null=True, blank=True)
     is_used_last_token = models.BooleanField(default=False)
 

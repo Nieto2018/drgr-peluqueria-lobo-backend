@@ -1,5 +1,4 @@
 from backend import settings
-from django.db import transaction
 from django.core.mail import EmailMessage
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
@@ -79,7 +78,6 @@ class SendVerificationEmail(graphene.Mutation):
         except get_user_model().DoesNotExist:
             errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
 
-        payload = None
         template_name = None
         site_dir = None
         subject = None
@@ -98,6 +96,8 @@ class SendVerificationEmail(graphene.Mutation):
             elif UserActionEnum.UPDATE_EMAIL == action:
                 if not user.is_active:
                     errors_list.append(settings.USER_INACTIVE_ERROR)
+                elif get_user_model().objects.filter(email__iexact=email).exists():
+                    errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
                 else:
                     payload['email'] = email
                     template_name = "registration/verify_account_email.html"
@@ -126,9 +126,9 @@ class SendVerificationEmail(graphene.Mutation):
                 email_to_send.send()
 
                 # It save the token information to allow a only use
-                user.userinfo.is_used_last_token = False
-                user.userinfo.last_token = token
-                user.userinfo.save()
+                user.is_used_last_token = False
+                user.last_token = token
+                user.save()
                 # result = settings.EMAIL_SENT
                 result = settings.OK
 
@@ -168,17 +168,16 @@ class ActivateUser(graphene.Mutation):
                 if user is not None:
                     if user.is_active:
                         errors_list.append(settings.USER_ACTIVE_ERROR)
-                    elif token != user.userinfo.last_token:
+                    elif token != user.last_token:
                         raise Exception(settings.TOKEN_NOT_MATCH_ERROR)
-                    elif user.userinfo.is_used_last_token:
+                    elif user.is_used_last_token:
                         errors_list.append(settings.TOKEN_USED_ERROR)
 
                     if len(errors_list) == 0:
                         user.is_active = True
+                        user.is_used_last_token = True
                         user.save()
 
-                        user.userinfo.is_used_last_token = True
-                        user.userinfo.save()
                         # result = settings.USER_ACTIVATED
                         result = settings.OK
 
@@ -230,17 +229,16 @@ class UpdateEmail(graphene.Mutation):
                 if user is not None:
                     if not user.is_active:
                         errors_list.append(settings.USER_INACTIVE_ERROR)
-                    elif token != user.userinfo.last_token:
+                    elif token != user.last_token:
                         errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
-                    elif user.userinfo.is_used_last_token:
+                    elif user.is_used_last_token:
                         errors_list.append(settings.TOKEN_USED_ERROR)
 
                     if len(errors_list) == 0:
-                        user.email = new_email
+                        user.email = new_email.lower()
+                        user.is_used_last_token = True
                         user.save()
 
-                        user.userinfo.is_used_last_token = True
-                        user.userinfo.save()
                         # result = settings.EMAIL_UPDATED
                         result = settings.OK
 
@@ -295,19 +293,18 @@ class ResetPassword(graphene.Mutation):
                 if user is not None:
                     if not user.is_active:
                         errors_list.append(settings.USER_INACTIVE_ERROR)
-                    elif token != user.userinfo.last_token:
+                    elif token != user.last_token:
                         errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
-                    elif user.userinfo.is_used_last_token:
+                    elif user.is_used_last_token:
                         errors_list.append(settings.TOKEN_USED_ERROR)
 
                     if len(errors_list) == 0:
                         # https://django-graphql-jwt.domake.io/en/stable/settings.html#pyjwt
                         username = user.username
                         user.set_password(password1)
+                        user.is_used_last_token = True
                         user.save()
 
-                        user.userinfo.is_used_last_token = True
-                        user.userinfo.save()
                         # result = settings.PASSWORD_RESET
                         result = settings.OK
 
@@ -319,25 +316,68 @@ class ResetPassword(graphene.Mutation):
         return ResetPassword(user=username, result=result, errors=errors_list)
 
 
+class UserInput(graphene.InputObjectType):
+    email = graphene.String()
+    password1 = graphene.String()
+    password2 = graphene.String()
+    name = graphene.String()
+    surnames = graphene.String()
+    phone_number = graphene.String()
+
+
 class CreateUser(graphene.Mutation):
-    user = graphene.Field(UserType)
+    email = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
 
     class Arguments:
-        username = graphene.String(required=True)
-        password = graphene.String(required=True)
-        email = graphene.String(required=True)
+        input = graphene.Argument(UserInput)
 
-    def mutate(self, info, username, password, email):
-        with transaction.atomic():
-            # This code executes inside a transaction.
+    # def mutate(self, info, username, password, email):
+    def mutate(self, info, input):
+        result = settings.KO
+        errors_list = []
+
+        email = input.email
+        password1 = input.password1
+        password2 = input.password2
+        name = input.name
+        surnames = input.surnames
+        phone_number = input.phone_number
+
+        if email is None or len(email.strip()) == 0:
+            errors_list.append(settings.EMAIL_REQUIRED_ERROR)
+        elif get_user_model().objects.filter(email__iexact=email).exists():
+            errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
+
+        if password1 is None or len(password1.strip()) == 0:
+            errors_list.append(settings.PASSWORD1_REQUIRED_ERROR)
+
+        if password2 is None or len(password2.strip()) == 0:
+            errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
+        else:
+            if password1 != password2:
+                errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
+
+        if name is None or len(name.strip()) == 0:
+            errors_list.append(settings.NAME_REQUIRED_ERROR)
+
+        if surnames is None or len(surnames.strip()) == 0:
+            errors_list.append(settings.SURNAMES_REQUIRED_ERROR)
+
+        if len(errors_list) == 0:
             user = get_user_model()(
-                username=username,
-                email=email,
+                email=email.lower(),
+                first_name=name,
+                last_name=surnames,
+                phone_number=phone_number
             )
-            user.set_password(password)
+            user.set_password(input.password1)
             user.save()
 
-        return CreateUser(user=user)
+            result = settings.OK
+
+        return CreateUser(email=input.email, result=result, errors=errors_list)
 
 
 class DeactivateUser(graphene.Mutation):
@@ -360,8 +400,8 @@ class DeactivateUser(graphene.Mutation):
             user.is_active = False
             user.save()
 
-            user.userinfo.is_used_last_token = True
-            user.userinfo.save()
+            user.is_used_last_token = True
+            user.save()
             # result = settings.USER_DEACTIVATED
             result = settings.OK
 
@@ -373,5 +413,5 @@ class Mutation(graphene.ObjectType):
     activate_user = ActivateUser.Field()
     update_email = UpdateEmail.Field()
     reset_password = ResetPassword.Field()
-    deactivate_user = DeactivateUser.Field()
     create_user = CreateUser.Field()
+    deactivate_user = DeactivateUser.Field()

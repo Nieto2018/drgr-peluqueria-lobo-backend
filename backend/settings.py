@@ -197,6 +197,7 @@ SITE_NAME = 'Peluquería Lobo'
 #  Users
 ##########################
 
+# TODO delete comment constants?
 # Messages
 # EMAIL_SENT = 'EmailSent'
 # EMAIL_UPDATED = 'EmailUpdated'
@@ -213,7 +214,10 @@ USER_INACTIVE_ERROR = 'UserInactiveError'
 # USER_ACTIVATED_ERROR = 'UserActivated'
 # USER_DEACTIVATED_ERROR = 'UserDeactivatedError'
 # EMAIL_NOT_SENT_ERROR = 'EmailNotSendError'
+NAME_REQUIRED_ERROR = 'NameRequiredError'
+SURNAMES_REQUIRED_ERROR = 'SurnamesRequiredError'
 EMAIL_REQUIRED_ERROR = 'EmailRequiredError'
+EMAIL_ALREADY_REGISTERED_ERROR = 'EmailAlreadyRegisteredError'
 # EMAIL_NOT_UPDATED_ERROR = 'EmailNotUpdatedError'
 # PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
 PASSWORD1_REQUIRED_ERROR = 'Password1RequiredError'
@@ -224,7 +228,7 @@ PASSWORDS_NOT_MATCH_ERROR = 'PasswordsNotMatchError'
 ##########################
 
 # Messages
-OK = 'Ok'
+OK = 'OK'
 KO = 'KO'
 
 # Error messages
