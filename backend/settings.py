@@ -55,6 +55,9 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = THIRD_PARTY_APPS + LOCAL_APPS + DJANGO_APPS
 
+# Define a custom User model
+AUTH_USER_MODEL = 'dates.User'
+
 # Graphene settings
 GRAPHENE = {
     'SCHEMA': 'backend.schema.graphql_schema',
@@ -194,28 +197,39 @@ SITE_NAME = 'Peluquería Lobo'
 #  Users
 ##########################
 
+# TODO delete comment constants?
 # Messages
-EMAIL_SENT = 'EmailSent'
-EMAIL_UPDATED = 'EmailUpdated'
-PASSWORD_RESET = 'PasswordReset'
-USER_ACTIVATED = 'UserActivated'
+# EMAIL_SENT = 'EmailSent'
+# EMAIL_UPDATED = 'EmailUpdated'
+# PASSWORD_RESET = 'PasswordReset'
+# USER_ACTIVATED = 'UserActivated'
+# USER_DEACTIVATED = 'UserDeactivated'
 
 # Error messages
 USER_DOES_NOT_EXIST_ERROR = 'UserDoesNotExistError'
 USER_NOT_LOGGED_IN_ERROR = 'UserNotLoggedInError'
+# USER_NOT_ACTIVATED_ERROR = 'UserNotActivatedError'
 USER_ACTIVE_ERROR = 'UserActiveErrorError'
 USER_INACTIVE_ERROR = 'UserInactiveError'
-EMAIL_NOT_SENT_ERROR = 'EmailNotSendError'
+# USER_ACTIVATED_ERROR = 'UserActivated'
+# USER_DEACTIVATED_ERROR = 'UserDeactivatedError'
+# EMAIL_NOT_SENT_ERROR = 'EmailNotSendError'
+NAME_REQUIRED_ERROR = 'NameRequiredError'
+SURNAMES_REQUIRED_ERROR = 'SurnamesRequiredError'
 EMAIL_REQUIRED_ERROR = 'EmailRequiredError'
-EMAIL_NOT_UPDATED_ERROR = 'EmailNotUpdatedError'
-PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
+EMAIL_ALREADY_REGISTERED_ERROR = 'EmailAlreadyRegisteredError'
+# EMAIL_NOT_UPDATED_ERROR = 'EmailNotUpdatedError'
+# PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
 PASSWORD1_REQUIRED_ERROR = 'Password1RequiredError'
 PASSWORD2_REQUIRED_ERROR = 'Password2RequiredError'
 PASSWORDS_NOT_MATCH_ERROR = 'PasswordsNotMatchError'
-USER_NOT_ACTIVATED_ERROR = 'UserNotActivatedError'
 ##########################
 # Generics
 ##########################
+
+# Messages
+OK = 'OK'
+KO = 'KO'
 
 # Error messages
 INVALID_ACTION_ERROR = 'InvalidActionError'

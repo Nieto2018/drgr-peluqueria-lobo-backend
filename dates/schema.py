@@ -1,17 +1,15 @@
-import graphene
+from graphene import relay
+from graphene_django.filter import DjangoFilterConnectionField
+from graphql_relay.node.node import from_global_id
 
 from .subscriptions import \
     AppointmentNode, \
     AppointmentStateActionEnum, \
     AppointmentStateNode, \
     AppointmentState, \
-    OnAppointmentState, \
-    UserInfoNode
+    OnAppointmentState
 
-# from django.contrib.auth.models import User
-from graphene import relay
-from graphene_django.filter import DjangoFilterConnectionField
-from graphql_relay.node.node import from_global_id
+import graphene
 
 
 class CreateAppointmentState(graphene.Mutation):
@@ -80,9 +78,6 @@ class DeleteAppointmentState(graphene.Mutation):
 
 class Query(graphene.ObjectType):
     """Root GraphQL query."""
-
-    relay_user_info = relay.Node.Field(UserInfoNode)
-    relay_user_infos = DjangoFilterConnectionField(UserInfoNode)
 
     relay_appointment_state = relay.Node.Field(AppointmentStateNode)
     relay_appointment_states = DjangoFilterConnectionField(AppointmentStateNode)

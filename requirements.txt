@@ -8,5 +8,3 @@ graphene==2.1.8
 graphene_django==2.7.1
 graphql-core==2.2.1
 graphql_relay==2.0.1
-django-rest-auth==0.9.5
-django-allauth==0.40.0

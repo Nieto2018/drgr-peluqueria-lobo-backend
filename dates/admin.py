@@ -1,9 +1,9 @@
+"""Integrate with admin module."""
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.utils.translation import ugettext_lazy as _
 
-from django.contrib.auth.models import User
-from .models import Appointment, AppointmentState, UserInfo
-
+from .models import Appointment, AppointmentState, User
 
 classes = [Appointment, AppointmentState]
 
@@ -11,19 +11,26 @@ for c in classes:
     admin.site.register(c)
 
 
-# Define an inline admin descriptor for UserInfo model
-# which acts a bit like a singleton
-class UserInfoInLine(admin.StackedInline):
-    model = UserInfo
-    verbose_name_plural = 'Extra info'
-    fk_name = "user"
+@admin.register(User)
+class UserAdmin(DjangoUserAdmin):
+    """Define admin model for custom User model with no email field."""
 
-
-# Define a new User admin
-class UserAdmin(BaseUserAdmin):
-    inlines = (UserInfoInLine, )
-
-
-# Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'phone_number')}),
+        # TODO delete user_managed_by?
+        # (_('Extra info'), {'fields': ('user_managed_by', 'is_vip', 'last_token', 'is_used_last_token')}),
+        (_('Extra info'), {'fields': ('is_vip', 'last_token', 'is_used_last_token')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
+                                       'groups', 'user_permissions')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2'),
+        }),
+    )
+    list_display = ('email', 'first_name', 'last_name', 'is_vip', 'is_active', 'is_staff')
+    search_fields = ('email', 'first_name', 'last_name')
+    ordering = ('email',)
