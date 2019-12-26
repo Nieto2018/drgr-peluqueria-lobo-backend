@@ -172,12 +172,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# if DEBUG:
 # It is compulsory in order to avoid the [Errno 111] when the Rest
+# It could need refreshing web app to show new emails (maildump/mailhog docker)
 # API is called to reset password by Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST: 'localhost'
-# EMAIL_PORT: 1025
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = '127.0.0.1'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
 
 
 #########################################################################################################
