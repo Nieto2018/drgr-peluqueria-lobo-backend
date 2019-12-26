@@ -57,11 +57,10 @@ class SendVerificationEmail(graphene.Mutation):
         result = settings.KO
         errors_list = []
 
+        user = None
         if email is None or len(email.strip()) == 0:
             errors_list.append(settings.EMAIL_REQUIRED_ERROR)
-
-        user = None
-        if UserActionEnum.UPDATE_EMAIL == action:
+        elif UserActionEnum.UPDATE_EMAIL == action:
             context_user = info.context.user
             if context_user.is_anonymous:
                 errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
