@@ -70,7 +70,7 @@ GRAPHENE = {
 # Django GraphQL JWT settings
 GRAPHQL_JWT = {
     'JWT_VERIFY_EXPIRATION': True,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=30),  # Default minutes=5
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=15),  # Default minutes=5
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -197,6 +197,7 @@ EMAIL_USE_TLS = False
 
 CLIENT_URL = 'http://localhost:3000'
 SITE_NAME = 'Peluquería Lobo'
+JWT_EXPIRATION_DELTA_EMAILS = datetime.timedelta(minutes=15)  # For tokens of emails
 
 ##########################
 #  Users

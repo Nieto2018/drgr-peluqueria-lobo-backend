@@ -6,6 +6,7 @@ from graphene_django import DjangoObjectType
 from graphql_jwt.utils import jwt_payload, jwt_encode, jwt_decode
 from jwt.exceptions import ExpiredSignatureError
 
+import datetime
 import graphene
 import re
 import sys
@@ -81,6 +82,7 @@ class SendVerificationEmail(graphene.Mutation):
         if user is not None:
             # https://django-graphql-jwt.domake.io/en/stable/settings.html#pyjwt
             payload = jwt_payload(user)
+            payload['exp'] = datetime.datetime.utcnow() + settings.JWT_EXPIRATION_DELTA_EMAILS
 
             if UserActionEnum.ACTIVATE_USER == action:
                 if user.is_active:
