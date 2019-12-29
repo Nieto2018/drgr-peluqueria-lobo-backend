@@ -209,9 +209,12 @@ class UpdateEmail(graphene.Mutation):
                 old_email = payload.get('email')
                 new_email = payload.get('new_email')
 
+                email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
                 if old_email is None or len(old_email.strip()) == 0 \
                         or new_email is None or len(new_email.strip()) == 0 is None:
                     raise Exception()
+                elif email_pattern.match(new_email) is None:
+                    errors_list.append(settings.EMAIL_REGEX_ERROR)
                 elif get_user_model().objects.filter(email__iexact=new_email).exists():
                     errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
                 else:
@@ -271,7 +274,7 @@ class ResetPassword(graphene.Mutation):
             errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
         else:
             password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
-            if not password_pattern.match(password1):
+            if password_pattern.match(password1) is None:
                 errors_list.append(settings.PASSWORD_REGEX_ERROR)
 
         if token is None or len(token.strip()) == 0:
@@ -342,8 +345,11 @@ class CreateUser(graphene.Mutation):
         surnames = input.surnames
         phone_number = input.phone_number
 
+        email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
         if email is None or len(email.strip()) == 0:
             errors_list.append(settings.EMAIL_REQUIRED_ERROR)
+        elif email_pattern.match(email) is None:
+            errors_list.append(settings.EMAIL_REGEX_ERROR)
         elif get_user_model().objects.filter(email__iexact=email).exists():
             errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
 
@@ -352,9 +358,13 @@ class CreateUser(graphene.Mutation):
 
         if password2 is None or len(password2.strip()) == 0:
             errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
+
+        if password1 != password2:
+            errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
         else:
-            if password1 != password2:
-                errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
+            password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
+            if password_pattern.match(password1) is None:
+                errors_list.append(settings.PASSWORD_REGEX_ERROR)
 
         if name is None or len(name.strip()) == 0:
             errors_list.append(settings.NAME_REQUIRED_ERROR)

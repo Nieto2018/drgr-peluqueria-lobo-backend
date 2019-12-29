@@ -205,6 +205,7 @@ JWT_EXPIRATION_DELTA_EMAILS = datetime.timedelta(minutes=15)  # For tokens of em
 
 
 # Password: Length between 8 and 16 characters. 1 digit, 1 upper case character and 1 lower case character
+EMAIL_REGEX_PATTERN = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 PASSWORD_REGEX_PATTERN = '^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$'
 
 # TODO delete comment constants?
@@ -227,6 +228,7 @@ USER_INACTIVE_ERROR = 'UserInactiveError'
 NAME_REQUIRED_ERROR = 'NameRequiredError'
 SURNAMES_REQUIRED_ERROR = 'SurnamesRequiredError'
 EMAIL_REQUIRED_ERROR = 'EmailRequiredError'
+EMAIL_REGEX_ERROR = 'EmailRegexError'
 EMAIL_ALREADY_REGISTERED_ERROR = 'EmailAlreadyRegisteredError'
 # EMAIL_NOT_UPDATED_ERROR = 'EmailNotUpdatedError'
 # PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
