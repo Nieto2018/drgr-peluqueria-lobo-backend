@@ -202,6 +202,10 @@ SITE_NAME = 'Peluquería Lobo'
 #  Users
 ##########################
 
+
+# Password: Length between 8 and 16 characters. 1 digit, 1 upper case character and 1 lower case character
+PASSWORD_REGEX_PATTERN = '^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$'
+
 # TODO delete comment constants?
 # Messages
 # EMAIL_SENT = 'EmailSent'
@@ -227,6 +231,7 @@ EMAIL_ALREADY_REGISTERED_ERROR = 'EmailAlreadyRegisteredError'
 # PASSWORD_NOT_RESET_ERROR = 'PasswordNotResetError'
 PASSWORD1_REQUIRED_ERROR = 'Password1RequiredError'
 PASSWORD2_REQUIRED_ERROR = 'Password2RequiredError'
+PASSWORD_REGEX_ERROR = 'PasswordRegexError'
 PASSWORDS_NOT_MATCH_ERROR = 'PasswordsNotMatchError'
 ##########################
 # Generics
