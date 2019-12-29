@@ -7,6 +7,7 @@ from graphql_jwt.utils import jwt_payload, jwt_encode, jwt_decode
 from jwt.exceptions import ExpiredSignatureError
 
 import graphene
+import re
 import sys
 
 
@@ -263,9 +264,13 @@ class ResetPassword(graphene.Mutation):
 
         if password2 is None or len(password2.strip()) == 0:
             errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
+
+        if password1 != password2:
+            errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
         else:
-            if password1 != password2:
-                errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
+            password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
+            if not password_pattern.match(password1):
+                errors_list.append(settings.PASSWORD_REGEX_ERROR)
 
         if token is None or len(token.strip()) == 0:
             errors_list.append(settings.TOKEN_REQUIRED_ERROR)
