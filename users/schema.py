@@ -74,7 +74,7 @@ class SendVerificationEmail(graphene.Mutation):
             try:
                 user = get_user_model().objects.get(email__iexact=email)
             except get_user_model().DoesNotExist:
-                errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+                errors_list.append(settings.ACCOUNT_DOES_NOT_EXIST_ERROR)
 
         template_name = None
         site_dir = None
@@ -86,22 +86,22 @@ class SendVerificationEmail(graphene.Mutation):
 
             if UserActionEnum.ACTIVATE_USER == action:
                 if user.is_active:
-                    errors_list.append(settings.USER_ACTIVE_ERROR)
+                    errors_list.append(settings.ACCOUNT_ACTIVE_ERROR)
                 else:
                     template_name = "registration/verify_account_email.html"
                     subject = settings.SITE_NAME + " - Finalizar registro"
-                    site_dir = "account/user-activated"
+                    site_dir = "account/activate-account"
             elif UserActionEnum.UPDATE_EMAIL == action:
                 if not user.is_active:
-                    errors_list.append(settings.USER_INACTIVE_ERROR)
+                    errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                 else:
                     payload['new_email'] = email
                     template_name = "registration/verify_account_email.html"
                     subject = settings.SITE_NAME + " - Actualizar dirección de correo electrónico"
-                    site_dir = "account/email-updated"
+                    site_dir = "account/update-email"
             elif UserActionEnum.RESET_PASSWORD == action:
                 if not user.is_active:
-                    errors_list.append(settings.USER_INACTIVE_ERROR)
+                    errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                 else:
                     template_name = "registration/password_reset_email.html"
                     subject = settings.SITE_NAME + " - Restablecer contraseña"
@@ -131,7 +131,78 @@ class SendVerificationEmail(graphene.Mutation):
         return SendVerificationEmail(email=user_email, action=action, result=result, errors=errors_list)
 
 
-class ActivateUser(graphene.Mutation):
+class UserInput(graphene.InputObjectType):
+    email = graphene.String()
+    password1 = graphene.String()
+    password2 = graphene.String()
+    name = graphene.String()
+    surnames = graphene.String()
+    phone_number = graphene.String()
+
+
+class CreateAccount(graphene.Mutation):
+    email = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    class Arguments:
+        input = graphene.Argument(UserInput)
+
+    def mutate(self, info, input):
+        result = settings.KO
+        errors_list = []
+
+        email = input.email
+        password1 = input.password1
+        password2 = input.password2
+        name = input.name
+        surnames = input.surnames
+        phone_number = input.phone_number
+
+        email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
+        if email is None or len(email.strip()) == 0:
+            errors_list.append(settings.EMAIL_REQUIRED_ERROR)
+        elif email_pattern.match(email) is None:
+            errors_list.append(settings.EMAIL_REGEX_ERROR)
+        elif get_user_model().objects.filter(email__iexact=email).exists():
+            errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
+
+        if password1 is None or len(password1.strip()) == 0:
+            errors_list.append(settings.PASSWORD1_REQUIRED_ERROR)
+
+        if password2 is None or len(password2.strip()) == 0:
+            errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
+
+        if password1 != password2:
+            errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
+        else:
+            password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
+            if password_pattern.match(password1) is None:
+                errors_list.append(settings.PASSWORD_REGEX_ERROR)
+
+        if name is None or len(name.strip()) == 0:
+            errors_list.append(settings.NAME_REQUIRED_ERROR)
+
+        if surnames is None or len(surnames.strip()) == 0:
+            errors_list.append(settings.SURNAMES_REQUIRED_ERROR)
+
+        if len(errors_list) == 0:
+            user = get_user_model()(
+                email=email.lower(),
+                first_name=name,
+                last_name=surnames,
+                phone_number=phone_number
+            )
+            user.set_password(input.password1)
+            user.is_active = False
+            user.save()
+
+            result = settings.OK
+
+        return CreateAccount(email=input.email, result=result, errors=errors_list)
+
+
+class ActivateAccount(graphene.Mutation):
     email = graphene.String()
     result = graphene.String()
     errors = graphene.List(graphene.String)
@@ -157,13 +228,13 @@ class ActivateUser(graphene.Mutation):
 
                 user = None
                 try:
-                    user = get_user_model().objects.get(email_iexact=email)
+                    user = get_user_model().objects.get(email=email.lower())
                 except get_user_model().DoesNotExist:
-                    errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+                    errors_list.append(settings.ACCOUNT_DOES_NOT_EXIST_ERROR)
 
                 if user is not None:
                     if user.is_active:
-                        errors_list.append(settings.USER_ACTIVE_ERROR)
+                        errors_list.append(settings.ACCOUNT_ACTIVE_ERROR)
                     elif token != user.last_token:
                         raise Exception(settings.TOKEN_NOT_MATCH_ERROR)
                     elif user.is_used_last_token:
@@ -182,7 +253,33 @@ class ActivateUser(graphene.Mutation):
             except Exception:
                 errors_list.append(settings.TOKEN_ERROR)
 
-        return ActivateUser(email=email, result=result, errors=errors_list)
+        return ActivateAccount(email=email, result=result, errors=errors_list)
+
+
+class DeactivateAccount(graphene.Mutation):
+    email = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    def mutate(self, info):
+        # result = settings.USER_DEACTIVATED_ERROR
+        result = settings.KO
+        errors_list = []
+
+        user = info.context.user
+        if user.is_anonymous:
+            errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
+        elif not user.is_active:
+            errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
+
+        if len(errors_list) == 0:
+            user.is_active = False
+            user.is_used_last_token = True
+            user.save()
+            # result = settings.USER_DEACTIVATED
+            result = settings.OK
+
+        return DeactivateAccount(email=user.email, result=result, errors=errors_list)
 
 
 class UpdateEmail(graphene.Mutation):
@@ -222,11 +319,11 @@ class UpdateEmail(graphene.Mutation):
                     try:
                         user = get_user_model().objects.get(email=old_email)
                     except get_user_model().DoesNotExist:
-                        errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+                        errors_list.append(settings.ACCOUNT_DOES_NOT_EXIST_ERROR)
 
                     if user is not None:
                         if not user.is_active:
-                            errors_list.append(settings.USER_INACTIVE_ERROR)
+                            errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                         elif token != user.last_token:
                             errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
                         elif user.is_used_last_token:
@@ -290,11 +387,11 @@ class ResetPassword(graphene.Mutation):
                 try:
                     user = get_user_model().objects.get(email=email)
                 except get_user_model().DoesNotExist:
-                    errors_list.append(settings.USER_DOES_NOT_EXIST_ERROR)
+                    errors_list.append(settings.ACCOUNT_DOES_NOT_EXIST_ERROR)
 
                 if user is not None:
                     if not user.is_active:
-                        errors_list.append(settings.USER_INACTIVE_ERROR)
+                        errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                     elif token != user.last_token:
                         errors_list.append(settings.TOKEN_NOT_MATCH_ERROR)
                     elif user.is_used_last_token:
@@ -317,107 +414,10 @@ class ResetPassword(graphene.Mutation):
         return ResetPassword(email=email, result=result, errors=errors_list)
 
 
-class UserInput(graphene.InputObjectType):
-    email = graphene.String()
-    password1 = graphene.String()
-    password2 = graphene.String()
-    name = graphene.String()
-    surnames = graphene.String()
-    phone_number = graphene.String()
-
-
-class CreateUser(graphene.Mutation):
-    email = graphene.String()
-    result = graphene.String()
-    errors = graphene.List(graphene.String)
-
-    class Arguments:
-        input = graphene.Argument(UserInput)
-
-    def mutate(self, info, input):
-        result = settings.KO
-        errors_list = []
-
-        email = input.email
-        password1 = input.password1
-        password2 = input.password2
-        name = input.name
-        surnames = input.surnames
-        phone_number = input.phone_number
-
-        email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
-        if email is None or len(email.strip()) == 0:
-            errors_list.append(settings.EMAIL_REQUIRED_ERROR)
-        elif email_pattern.match(email) is None:
-            errors_list.append(settings.EMAIL_REGEX_ERROR)
-        elif get_user_model().objects.filter(email__iexact=email).exists():
-            errors_list.append(settings.EMAIL_ALREADY_REGISTERED_ERROR)
-
-        if password1 is None or len(password1.strip()) == 0:
-            errors_list.append(settings.PASSWORD1_REQUIRED_ERROR)
-
-        if password2 is None or len(password2.strip()) == 0:
-            errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
-
-        if password1 != password2:
-            errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
-        else:
-            password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
-            if password_pattern.match(password1) is None:
-                errors_list.append(settings.PASSWORD_REGEX_ERROR)
-
-        if name is None or len(name.strip()) == 0:
-            errors_list.append(settings.NAME_REQUIRED_ERROR)
-
-        if surnames is None or len(surnames.strip()) == 0:
-            errors_list.append(settings.SURNAMES_REQUIRED_ERROR)
-
-        if len(errors_list) == 0:
-            user = get_user_model()(
-                email=email.lower(),
-                first_name=name,
-                last_name=surnames,
-                phone_number=phone_number
-            )
-            user.set_password(input.password1)
-            user.is_active = False
-            user.save()
-
-            result = settings.OK
-
-        return CreateUser(email=input.email, result=result, errors=errors_list)
-
-
-class DeactivateUser(graphene.Mutation):
-    email = graphene.String()
-    result = graphene.String()
-    errors = graphene.List(graphene.String)
-
-    def mutate(self, info):
-        # result = settings.USER_DEACTIVATED_ERROR
-        result = settings.KO
-        errors_list = []
-
-        user = info.context.user
-        if user.is_anonymous:
-            errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
-        elif not user.is_active:
-            errors_list.append(settings.USER_INACTIVE_ERROR)
-
-        if len(errors_list) == 0:
-            user.is_active = False
-            user.is_used_last_token = True
-            user.save()
-            # result = settings.USER_DEACTIVATED
-            result = settings.OK
-
-        return DeactivateUser(email=user.email, result=result, errors=errors_list)
-
-
 class Mutation(graphene.ObjectType):
     send_verification_email = SendVerificationEmail.Field()
-    activate_user = ActivateUser.Field()
+    create_account = CreateAccount.Field()
+    activate_account = ActivateAccount.Field()
+    deactivate_account = DeactivateAccount.Field()
     update_email = UpdateEmail.Field()
     reset_password = ResetPassword.Field()
-    create_user = CreateUser.Field()
-    deactivate_user = DeactivateUser.Field()
