@@ -17,8 +17,8 @@ class UserType(DjangoObjectType):
         model = get_user_model()
 
 
-class UserActionEnum(graphene.Enum):
-    ACTIVATE_USER = "Activate_user"
+class AccountActionEnum(graphene.Enum):
+    ACTIVATE_ACCOUNT = "Activate_account"
     UPDATE_EMAIL = "Update_email"
     RESET_PASSWORD = "Reset_password"
 
@@ -47,11 +47,11 @@ class SendVerificationEmail(graphene.Mutation):
     class Arguments:
         email = graphene.String()
 
-        # action=ACTIVATE_USER => To activate a new user
-        # action=UPDATE_EMAIL => To change email (User must be active)
-        # action=RESET_PASSWORD => To reset password (User must be active)
-        action = graphene.Argument(UserActionEnum,
-                                   description="Possible values: ACTIVATE_USER, UPDATE_EMAIL or RESET_PASSWORD")
+        # action=ACTIVATE_ACCOUNT => To activate a new account
+        # action=UPDATE_EMAIL => To change email (Account must be active)
+        # action=RESET_PASSWORD => To reset password (Account must be active)
+        action = graphene.Argument(AccountActionEnum,
+                                   description="Possible values: ACTIVATE_ACCOUNT, UPDATE_EMAIL or RESET_PASSWORD")
 
     def mutate(self, info, email, action):
         user_email = None
@@ -62,7 +62,7 @@ class SendVerificationEmail(graphene.Mutation):
         user = None
         if email is None or len(email.strip()) == 0:
             errors_list.append(settings.EMAIL_REQUIRED_ERROR)
-        elif UserActionEnum.UPDATE_EMAIL == action:
+        elif AccountActionEnum.UPDATE_EMAIL == action:
             context_user = info.context.user
             if context_user.is_anonymous:
                 errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
@@ -84,14 +84,14 @@ class SendVerificationEmail(graphene.Mutation):
             payload = jwt_payload(user)
             payload['exp'] = datetime.datetime.utcnow() + settings.JWT_EXPIRATION_DELTA_EMAILS
 
-            if UserActionEnum.ACTIVATE_USER == action:
+            if AccountActionEnum.ACTIVATE_ACCOUNT == action:
                 if user.is_active:
                     errors_list.append(settings.ACCOUNT_ACTIVE_ERROR)
                 else:
                     template_name = "registration/verify_account_email.html"
                     subject = settings.SITE_NAME + " - Finalizar registro"
                     site_dir = "account/activate-account"
-            elif UserActionEnum.UPDATE_EMAIL == action:
+            elif AccountActionEnum.UPDATE_EMAIL == action:
                 if not user.is_active:
                     errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                 else:
@@ -99,7 +99,7 @@ class SendVerificationEmail(graphene.Mutation):
                     template_name = "registration/verify_account_email.html"
                     subject = settings.SITE_NAME + " - Actualizar dirección de correo electrónico"
                     site_dir = "account/update-email"
-            elif UserActionEnum.RESET_PASSWORD == action:
+            elif AccountActionEnum.RESET_PASSWORD == action:
                 if not user.is_active:
                     errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
                 else:
