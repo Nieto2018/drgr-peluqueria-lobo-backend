@@ -8,6 +8,7 @@ from jwt.exceptions import ExpiredSignatureError
 
 import datetime
 import graphene
+import phonenumbers
 import re
 import sys
 
@@ -185,6 +186,16 @@ class CreateAccount(graphene.Mutation):
 
         if surnames is None or len(surnames.strip()) == 0:
             errors_list.append(settings.SURNAMES_REQUIRED_ERROR)
+
+        if phone_number is None or len(phone_number.strip()) == 0:
+            errors_list.append(settings.PHONE_NUMBER_REQUIRED_ERROR)
+        else:
+            try:
+                parsed_phone_number = phonenumbers.parse(phone_number)
+                if not phonenumbers.is_valid_number(parsed_phone_number):
+                    errors_list.append(settings.PHONE_NUMBER_NOT_VALID_ERROR)
+            except phonenumbers.NumberParseException:
+                errors_list.append(settings.PHONE_NUMBER_NOT_VALID_ERROR)
 
         if len(errors_list) == 0:
             user = get_user_model()(
