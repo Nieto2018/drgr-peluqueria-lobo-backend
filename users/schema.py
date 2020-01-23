@@ -356,6 +356,48 @@ class UpdateEmail(graphene.Mutation):
         return UpdateEmail(old_email=old_email, new_email=new_email, result=result, errors=errors_list)
 
 
+class ChangePassword(graphene.Mutation):
+    email = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    class Arguments:
+        password1 = graphene.String()
+        password2 = graphene.String()
+
+    def mutate(self, info, password1, password2):
+        email = None
+        result = settings.KO
+        errors_list = []
+
+        user = info.context.user
+        if user.is_anonymous:
+            errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
+        elif not user.is_active:
+            errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
+
+        if password1 is None or len(password1.strip()) == 0:
+            errors_list.append(settings.PASSWORD1_REQUIRED_ERROR)
+
+        if password2 is None or len(password2.strip()) == 0:
+            errors_list.append(settings.PASSWORD2_REQUIRED_ERROR)
+
+        if password1 != password2:
+            errors_list.append(settings.PASSWORDS_NOT_MATCH_ERROR)
+        else:
+            password_pattern = re.compile(settings.PASSWORD_REGEX_PATTERN)
+            if password_pattern.match(password1) is None:
+                errors_list.append(settings.PASSWORD_REGEX_ERROR)
+
+        if len(errors_list) == 0:
+            user.set_password(password1)
+            user.save()
+
+            result = settings.OK
+
+        return ChangePassword(email=email, result=result, errors=errors_list)
+
+
 class ResetPassword(graphene.Mutation):
     email = graphene.String()
     result = graphene.String()
@@ -431,4 +473,5 @@ class Mutation(graphene.ObjectType):
     activate_account = ActivateAccount.Field()
     deactivate_account = DeactivateAccount.Field()
     update_email = UpdateEmail.Field()
+    change_password = ChangePassword.Field()
     reset_password = ResetPassword.Field()
