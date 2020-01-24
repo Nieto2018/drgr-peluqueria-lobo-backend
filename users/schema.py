@@ -61,8 +61,11 @@ class SendVerificationEmail(graphene.Mutation):
         errors_list = []
 
         user = None
+        email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
         if email is None or len(email.strip()) == 0:
             errors_list.append(settings.EMAIL_REQUIRED_ERROR)
+        elif email_pattern.match(email) is None:
+            errors_list.append(settings.EMAIL_REGEX_ERROR)
         elif AccountActionEnum.UPDATE_EMAIL == action:
             context_user = info.context.user
             if context_user.is_anonymous:
@@ -132,7 +135,7 @@ class SendVerificationEmail(graphene.Mutation):
         return SendVerificationEmail(email=user_email, action=action, result=result, errors=errors_list)
 
 
-class UserInput(graphene.InputObjectType):
+class CreateAccountInput(graphene.InputObjectType):
     email = graphene.String()
     password1 = graphene.String()
     password2 = graphene.String()
@@ -147,7 +150,7 @@ class CreateAccount(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     class Arguments:
-        input = graphene.Argument(UserInput)
+        input = graphene.Argument(CreateAccountInput)
 
     def mutate(self, info, input):
         result = settings.KO
@@ -211,6 +214,90 @@ class CreateAccount(graphene.Mutation):
             result = settings.OK
 
         return CreateAccount(email=input.email, result=result, errors=errors_list)
+
+
+class EditAccountInput(graphene.InputObjectType):
+    email = graphene.String()
+    name = graphene.String()
+    surnames = graphene.String()
+    phone_number = graphene.String()
+    is_vip = graphene.Boolean()
+    is_active = graphene.Boolean()
+    is_staff = graphene.Boolean()
+
+
+class EditAccount(graphene.Mutation):
+    email = graphene.String()
+    result = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    class Arguments:
+        input = graphene.Argument(EditAccountInput)
+
+    def mutate(self, info, input):
+        result = settings.KO
+        errors_list = []
+
+        email = input.email
+        name = input.name
+        surnames = input.surnames
+        phone_number = input.phone_number
+
+        email_pattern = re.compile(settings.EMAIL_REGEX_PATTERN)
+        if email is None or len(email.strip()) == 0:
+            errors_list.append(settings.EMAIL_REQUIRED_ERROR)
+        elif email_pattern.match(email) is None:
+            errors_list.append(settings.EMAIL_REGEX_ERROR)
+
+        if name is None or len(name.strip()) == 0:
+            errors_list.append(settings.NAME_REQUIRED_ERROR)
+
+        if surnames is None or len(surnames.strip()) == 0:
+            errors_list.append(settings.SURNAMES_REQUIRED_ERROR)
+
+        if phone_number is None or len(phone_number.strip()) == 0:
+            errors_list.append(settings.PHONE_NUMBER_REQUIRED_ERROR)
+        else:
+            try:
+                parsed_phone_number = phonenumbers.parse(phone_number)
+                if not phonenumbers.is_valid_number(parsed_phone_number):
+                    errors_list.append(settings.PHONE_NUMBER_NOT_VALID_ERROR)
+            except phonenumbers.NumberParseException:
+                errors_list.append(settings.PHONE_NUMBER_NOT_VALID_ERROR)
+
+        edited_user = None  # account to edit
+        logged_in_user = info.context.user
+        if logged_in_user.is_anonymous:
+            errors_list.append(settings.USER_NOT_LOGGED_IN_ERROR)
+        elif not logged_in_user.is_active:
+            errors_list.append(settings.ACCOUNT_INACTIVE_ERROR)
+        elif logged_in_user.email == email:
+            # when an user is editing own account
+            edited_user = logged_in_user
+        elif logged_in_user.is_staff:
+            # when a staff user is editing another account
+            try:
+                edited_user = get_user_model().objects.get(email=email.lower())
+            except get_user_model().DoesNotExist:
+                errors_list.append(settings.ACCOUNT_DOES_NOT_EXIST_ERROR)
+        else:
+            errors_list.append(settings.OPERATION_NOT_ALLOWED_ERROR)
+
+        if len(errors_list) == 0:
+            edited_user.first_name = input.name
+            edited_user.last_name = input.surnames
+            edited_user.phone_number = input.phone_number
+            if logged_in_user.is_staff:
+                # This changes can only be done by a staff account
+                edited_user.is_vip = input.is_vip
+                edited_user.is_active = input.is_active
+                edited_user.is_staff = input.is_staff
+
+            edited_user.save()
+
+            result = settings.OK
+
+        return EditAccount(email=input.email, result=result, errors=errors_list)
 
 
 class ActivateAccount(graphene.Mutation):
@@ -470,6 +557,7 @@ class ResetPassword(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     send_verification_email = SendVerificationEmail.Field()
     create_account = CreateAccount.Field()
+    edit_account = EditAccount.Field()
     activate_account = ActivateAccount.Field()
     deactivate_account = DeactivateAccount.Field()
     update_email = UpdateEmail.Field()
