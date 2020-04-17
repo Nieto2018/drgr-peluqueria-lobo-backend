@@ -14,8 +14,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from django.views.decorators.csrf import csrf_exempt  # Only in development (new solution to disable CORS in development)
+from django.urls import path, include
+from django.views.decorators.csrf import \
+    csrf_exempt  # Only in development (new solution to disable CORS in development)
 from graphene_django.views import GraphQLView
 
 import django
@@ -33,8 +34,10 @@ def graphiql(request):
 
 urlpatterns = [
     # Django admin urls
+    path('', include('health_check.urls')),
     path('admin/', admin.site.urls),
 
+    # TODO review URLs
     # Subscriptions only works from this url
     # This url don't returns schema.graphql (Perhaps it was used in wrong way to get it)
     # path("graphiql/", graphiql), # Uncomment in real?
