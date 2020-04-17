@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ae6ipj5p05co-&zv16xq$$#pzg9((nbi5+(gq^lr_u59qt6w-5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('APP_ENVIRONMENT') == 'DEV'
 
 ALLOWED_HOSTS = []
 
@@ -42,6 +42,13 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'graphene_django',
+
+    # Running Health Checks
+    'health_check',
+    'health_check.db',
+    # 'health_check.cache',
+    # 'health_check.contrib.celery',
+
     # To adds CORS (Cross-Origin Resource Sharing) headers to responses (Frontend)
     'corsheaders',
 
@@ -100,11 +107,13 @@ MIDDLEWARE = [
 ]
 
 # To adds CORS (Cross-Origin Resource Sharing) headers to responses (Frontend)
-CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = [
-#     'http://localhost:3000',
-#     'http://127.0.0.1:3000'
-# ]
+if DEBUG:
+    CORS_ORIGIN_ALLOW_ALL = True
+else:
+    # CORS_ORIGIN_WHITELIST = [
+    #     os.getenv('FRONTEND_URL'),
+    # ]
+    pass
 
 TEMPLATES = [
     {
@@ -129,12 +138,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            # If you are using Cloud SQL for MySQL rather than PostgreSQL, set
+            # 'ENGINE': 'django.db.backends.mysql' instead of the following.
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DATABASE_NAME'),
+            'USER': os.getenv('DATABASE_USER'),
+            'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+            'HOST': os.getenv('DATABASE_URL'),
+            'PORT': os.getenv('DATABASE_PORT'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -157,9 +180,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
+# TODO language_code
 LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'es-ES'
 
+# TODO time_zone
 TIME_ZONE = 'UTC'
+# TIME_ZONE = 'ES'  # Europe/Madrid
 
 USE_I18N = True
 
@@ -169,7 +196,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-
+STATIC_ROOT = 'static/'
 STATIC_URL = '/static/'
 
 # if DEBUG:
@@ -183,7 +210,6 @@ EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 1025
 EMAIL_USE_TLS = False
-
 
 #########################################################################################################
 #########################################################################################################
