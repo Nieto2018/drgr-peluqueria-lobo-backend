@@ -1,0 +1,1 @@
+web: gunicorn -w 1 -k uvicorn.workers.UvicornWorker backend.wsgi:application --log-file -

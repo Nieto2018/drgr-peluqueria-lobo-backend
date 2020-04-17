@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import datetime
+import django_heroku
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -25,7 +26,7 @@ SECRET_KEY = 'ae6ipj5p05co-&zv16xq$$#pzg9((nbi5+(gq^lr_u59qt6w-5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('APP_ENVIRONMENT') == 'DEV'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -196,20 +197,20 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-STATIC_ROOT = 'static/'
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = 'static/'
 
 # if DEBUG:
 # It is compulsory in order to avoid the [Errno 111] when the Rest
 # It could need refreshing web app to show new emails (maildump/mailhog docker)
 # API is called to reset password by Email
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = '127.0.0.1'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = '127.0.0.1'
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_PORT = 1025
+# EMAIL_USE_TLS = False
 
 #########################################################################################################
 #########################################################################################################
@@ -280,3 +281,5 @@ TOKEN_USED_ERROR = 'TokenUsedError'
 TOKEN_NOT_MATCH_ERROR = 'TokenNotMatchError'
 EXPIRED_TOKEN_ERROR = 'ExpiredTokenError'
 OPERATION_NOT_ALLOWED_ERROR = 'OperationNotAllowedError'
+
+django_heroku.settings(locals())
