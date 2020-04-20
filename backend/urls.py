@@ -15,8 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-# from django.views.decorators.csrf import \
-#     csrf_exempt  # Only in development (new solution to disable CORS in development)
+from django.views.decorators.csrf import \
+    csrf_exempt  # Only in development (new solution to disable CORS in development)
 from graphene_django.views import GraphQLView
 
 import django
@@ -41,12 +41,12 @@ urlpatterns = [
     # Subscriptions only works from this url
     # This url don't returns schema.graphql (Perhaps it was used in wrong way to get it)
     # path("graphiql/", graphiql), # Uncomment in real?
-    # path("graphiql/", csrf_exempt(graphiql)),
-    path("graphiql/", graphiql),
+    path("graphiql/", csrf_exempt(graphiql)),
+    # path("graphiql/", graphiql),
 
     # Subscriptions doesn't work from this url
     # This url is used to get schema.graphql
     # path('graphql/', GraphQLView.as_view(graphiql=True)), # Uncomment in real?
-    # path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
-    path('graphql/', GraphQLView.as_view(graphiql=True)),
+    path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    # path('graphql/', GraphQLView.as_view(graphiql=True)),
 ]
