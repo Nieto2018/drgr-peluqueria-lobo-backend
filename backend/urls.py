@@ -42,9 +42,11 @@ urlpatterns = [
     # This url don't returns schema.graphql (Perhaps it was used in wrong way to get it)
     # path("graphiql/", graphiql), # Uncomment in real?
     path("graphiql/", csrf_exempt(graphiql)),
+    # path("graphiql/", graphiql),
 
     # Subscriptions doesn't work from this url
     # This url is used to get schema.graphql
     # path('graphql/', GraphQLView.as_view(graphiql=True)), # Uncomment in real?
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    # path('graphql/', GraphQLView.as_view(graphiql=True)),
 ]

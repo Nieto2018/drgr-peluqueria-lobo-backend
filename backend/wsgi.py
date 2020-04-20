@@ -7,10 +7,13 @@ For more information on this file, see
 https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 
-import os
+from channels.routing import get_default_application
 
-from django.core.wsgi import get_wsgi_application
+import django
+import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
-application = get_wsgi_application()
+# Adaptation to run subscriptions (to open websockets) with gunicorn and django
+django.setup()
+application = get_default_application()
