@@ -26,7 +26,8 @@ SECRET_KEY = 'ae6ipj5p05co-&zv16xq$$#pzg9((nbi5+(gq^lr_u59qt6w-5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('APP_ENVIRONMENT') == 'DEV'
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -51,7 +52,7 @@ THIRD_PARTY_APPS = [
     # 'health_check.contrib.celery',
 
     # To adds CORS (Cross-Origin Resource Sharing) headers to responses (Frontend)
-    'corsheaders',
+    # 'corsheaders',
 
     # For subscriptions
     'channels',
@@ -100,7 +101,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # To adds CORS (Cross-Origin Resource Sharing) headers to responses (Frontend)
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
