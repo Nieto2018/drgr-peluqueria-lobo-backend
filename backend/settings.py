@@ -24,7 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ae6ipj5p05co-&zv16xq$$#pzg9((nbi5+(gq^lr_u59qt6w-5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('APP_ENVIRONMENT') == 'DEV'
+DEBUG = os.getenv('DEBUG_MODE') == 'YES'
+ENABLE_CORS_FILTER = os.getenv('ENABLE_CORS_FILTER') == 'YES'
+PRO_DATABASE = os.getenv('PRO_DATABASE') == 'YES'
 
 ALLOWED_HOSTS = []
 
@@ -108,13 +110,13 @@ MIDDLEWARE = [
 ]
 
 # To adds CORS (Cross-Origin Resource Sharing) headers to responses (Frontend)
-if DEBUG:
-    CORS_ORIGIN_ALLOW_ALL = True
-else:
+if ENABLE_CORS_FILTER:
     CORS_ORIGIN_WHITELIST = [
-        'http://{}'.format(os.getenv('FRONTEND_URL')),
-        'https://{}'.format(os.getenv('FRONTEND_URL'))
+        'http://peluqueria-lobo.herokuapp.com',
+        'https://peluqueria-lobo.herokuapp.com',
     ]
+else:
+    CORS_ORIGIN_ALLOW_ALL = True
 
 TEMPLATES = [
     {
@@ -139,14 +141,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
-    }
-else:
+if PRO_DATABASE:
     DATABASES = {
         'default': {
             # If you are using Cloud SQL for MySQL rather than PostgreSQL, set
@@ -157,6 +152,13 @@ else:
             'PORT': os.getenv('DATABASE_PORT'),
             'USER': os.getenv('DATABASE_USER'),
             'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
 
