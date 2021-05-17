@@ -1,7 +1,8 @@
 __pycache__/
-venv37/
+venv3*/
 .vscode/
 .idea/
 staticfiles/
 static/
 /dates/migrations/
+.env
