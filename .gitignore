@@ -5,3 +5,4 @@ venv37/
 staticfiles/
 static/
 /dates/migrations/
+.project
